@@ -80,6 +80,7 @@ export S3_UPLOADS_PATH="/assets"
 				<button class="btn btn-primary" type="submit">Save</button>
 			</form>
 
+			<!--
 			<hr/>
 
 			<form id="s3-upload-credentials">
@@ -94,6 +95,7 @@ export S3_UPLOADS_PATH="/assets"
 				<button class="btn btn-primary" type="submit">Save</button>
 			</form>
 		</div>
+		-->
 
 		<!-- IMPORT admin/partials/settings/toc.tpl -->
 	</div>

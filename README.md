@@ -1,3 +1,5 @@
+# WIP 🍴 _This is a fork of a fork_
+
 # 🍴 _This is a fork_
 
 This package is published on npm as [@nodebb-community/nodebb-plugin-s3-uploads](https://www.npmjs.com/package/@nodebb-community/nodebb-plugin-s3-uploads-updated)

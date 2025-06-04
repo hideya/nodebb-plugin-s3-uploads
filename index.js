@@ -19,17 +19,32 @@ const fileModule = require.main.require('./src/file');
 
 const Package = require('./package.json');
 
+const PLUGIN_ID = '@h1deya/nodebb-plugin-s3-uploads'
+
+const isDebug = process.env.NODE_ENV === 'development';
+function log(...args) {
+	if (isDebug) {
+		console.log('\x1b[36m[S3 Uploads]\x1b[0m', ...args);
+	}
+}
+
 const plugin = module.exports;
 
 const settings = {
-	accessKeyId: false,
-	secretAccessKey: false,
+	// accessKeyId: false,
+	accessKeyId: process.env.AWS_ACCESS_KEY_ID || false,
+	// secretAccessKey: false,
+	secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || false,
 	region: process.env.AWS_DEFAULT_REGION || 'us-east-1',
 	bucket: process.env.S3_UPLOADS_BUCKET || undefined,
 	endpoint: process.env.S3_UPLOADS_ENDPOINT || 's3.amazonaws.com',
 	host: process.env.S3_UPLOADS_HOST || 's3.amazonaws.com',
 	path: process.env.S3_UPLOADS_PATH || undefined,
+	// Required for Cloudflare R2?
+	// forcePathStyle: process.env.S3_FORCE_PATH_STYLE  === 'true' || false,
 };
+
+log('settings', settings);
 
 let accessKeyIdFromDb = false;
 // eslint-disable-next-line no-unused-vars
@@ -45,22 +60,24 @@ function fetchSettings(callback) {
 			return;
 		}
 
+		log('fetchSettings: newSettings', newSettings);
+
 		accessKeyIdFromDb = false;
 		secretAccessKeyFromDb = false;
 
-		if (newSettings.accessKeyId) {
-			settings.accessKeyId = newSettings.accessKeyId;
-			accessKeyIdFromDb = true;
-		} else {
-			settings.accessKeyId = false;
-		}
+		// if (newSettings.accessKeyId) {
+		// 	settings.accessKeyId = newSettings.accessKeyId;
+		// 	accessKeyIdFromDb = true;
+		// } else {
+		// 	settings.accessKeyId = false;
+		// }
 
-		if (newSettings.secretAccessKey) {
-			settings.secretAccessKey = newSettings.secretAccessKey;
-			secretAccessKeyFromDb = false;
-		} else {
-			settings.secretAccessKey = false;
-		}
+		// if (newSettings.secretAccessKey) {
+		// 	settings.secretAccessKey = newSettings.secretAccessKey;
+		// 	secretAccessKeyFromDb = false;
+		// } else {
+		// 	settings.secretAccessKey = false;
+		// }
 
 		if (!newSettings.bucket) {
 			settings.bucket = process.env.S3_UPLOADS_BUCKET || '';
@@ -92,6 +109,8 @@ function fetchSettings(callback) {
 			settings.region = newSettings.region;
 		}
 
+		log('fetchSettings: settings', settings);
+
 		if (typeof callback === 'function') {
 			callback();
 		}
@@ -99,6 +118,8 @@ function fetchSettings(callback) {
 }
 
 function constructS3() {
+	log('constructS3', settings);
+
 	return new S3.S3Client({
 		region: settings.region,
 		endpoint: settings.endpoint,
@@ -106,6 +127,7 @@ function constructS3() {
 			accessKeyId: settings.accessKeyId,
 			secretAccessKey: settings.secretAccessKey,
 		},
+		// forcePathStyle: settings.forcePathStyle, // Required for R2?
 	});
 }
 
@@ -121,13 +143,15 @@ function makeError(err) {
 }
 
 plugin.activate = function (data) {
-	if (data.id === 'nodebb-plugin-s3-uploads') {
+	log('activate', data);
+	if (data.id === PLUGIN_ID) {
 		fetchSettings();
 	}
 };
 
 plugin.deactivate = function (data) {
-	if (data.id === 'nodebb-plugin-s3-uploads') {
+	log('deactivate', data);
+	if (data.id === PLUGIN_ID) {
 		// pass
 	}
 };
@@ -162,8 +186,10 @@ function renderAdmin(req, res) {
 		path: settings.path,
 		forumPath: forumPath,
 		region: settings.region,
-		accessKeyId: (accessKeyIdFromDb && settings.accessKeyId) || '',
-		secretAccessKey: (accessKeyIdFromDb && settings.secretAccessKey) || '',
+		// accessKeyId: (accessKeyIdFromDb && settings.accessKeyId) || '',
+		accessKeyId: settings.accessKeyId || '',
+		// secretAccessKey: (accessKeyIdFromDb && settings.secretAccessKey) || '',
+		secretAccessKey: settings.secretAccessKey || '',
 	};
 
 	res.render('admin/plugins/s3-uploads', data);
@@ -299,6 +325,8 @@ async function uploadToS3(filename, err, buffer, callback) {
 		return callback(makeError(err));
 	}
 
+	log('uploadToS3', filename)
+
 	let s3Path;
 	if (settings.path && settings.path.length > 0) {
 		s3Path = settings.path;
@@ -324,6 +352,9 @@ async function uploadToS3(filename, err, buffer, callback) {
 
 	try {
 		const s3Client = constructS3();
+
+		log('uploadToS3: s3Client.send: params', params)
+
 		await s3Client.send(new S3.PutObjectCommand(params));
 
 		// amazon has https enabled, we use it by default

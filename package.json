@@ -1,14 +1,17 @@
 {
-  "name": "@nodebb/nodebb-plugin-s3-uploads",
-  "version": "3.0.7",
+  "name": "@h1deya/nodebb-plugin-s3-uploads",
+  "version": "0.0.10",
   "description": "A plugin for NodeBB to take file uploads and store them on S3",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test-pack": "npm pack --dry-run",
+    "test-publish": "npm publish --access=public --dry-run",
+    "do-publish": "npm publish --access public"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/NodeBB-Community/nodebb-plugin-s3-uploads.git"
+    "url": "git+https://github.com/hideya/nodebb-plugin-s3-uploads.git"
   },
   "keywords": [
     "nodebb",
@@ -26,7 +29,7 @@
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/NodeBB-Community/nodebb-plugin-s3-uploads/issues"
+    "url": "https://github.com/hideyay/nodebb-plugin-s3-uploads/issues"
   },
   "nbbpm": {
     "compatibility": "^3.2.0"
